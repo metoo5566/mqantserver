@@ -1,44 +1,44 @@
-/**
-一定要记得在confin.json配置这个模块的参数,否则无法使用
-*/
+//一定要记得在confin.json配置这个模块的参数,否则无法使用
+
 package chat
 
 import (
 	"encoding/json"
+	"time"
+
 	"github.com/liangdas/mqant/conf"
 	"github.com/liangdas/mqant/gate"
 	"github.com/liangdas/mqant/log"
 	"github.com/liangdas/mqant/module"
 	"github.com/liangdas/mqant/module/base"
-	"time"
 )
 
-var Module = func() module.Module {
-	chat := new(Chat)
+var chatModule = func() module.Module {
+	chat := new(chatStuct)
 	return chat
 }
 
-type Chat struct {
+type chatStuct struct {
 	basemodule.BaseModule
-	listener *Listener
+	listener *chatListener
 	chats    map[string]map[string]gate.Session
 }
 
-func (m *Chat) GetType() string {
+func (m *chatStuct) GetType() string {
 	//很关键,需要与配置文件中的Module配置对应
 	return "Chat"
 }
-func (m *Chat) Version() string {
+func (m *chatStuct) Version() string {
 	//可以在监控时了解代码版本
 	return "1.0.0"
 }
-func (m *Chat) OnInit(app module.App, settings *conf.ModuleSettings) {
+func (m *chatStuct) OnInit(app module.App, settings *conf.ModuleSettings) {
 	//初始化模块
 	m.BaseModule.OnInit(m, app, settings)
 
 	m.chats = map[string]map[string]gate.Session{}
 	//注册一个rpc事件监听器,可以用来统计rpc调用的异常,执行时长等状态
-	m.listener=new(Listener)
+	m.listener = new(chatListener)
 	m.SetListener(m.listener)
 	//注册远程调用的函数
 	m.GetServer().RegisterGO("HD_JoinChat", m.joinChat) //我们约定所有对客户端的请求都以Handler_开头
@@ -46,31 +46,31 @@ func (m *Chat) OnInit(app module.App, settings *conf.ModuleSettings) {
 
 }
 
-func (m *Chat) Run(closeSig chan bool) {
+func (m *chatStuct) Run(closeSig chan bool) {
 	//运行模块
 }
 
-func (m *Chat) OnDestroy() {
+func (m *chatStuct) OnDestroy() {
 	//注销模块
 	//一定别忘了BaseModule.OnDestroy()
 	m.BaseModule.OnDestroy()
 }
 
-func (m *Chat) joinChat(session gate.Session, msg map[string]interface{}) (result map[string]interface{}, err string) {
+func (m *chatStuct) joinChat(session gate.Session, msg map[string]interface{}) (result map[string]interface{}, err string) {
 	if msg["roomName"] == "" {
 		err = "roomName cannot be nil"
 		return
 	}
-	log.TInfo(session,"session %v", session.GetSettings())
+	log.TInfo(session, "session %v", session.GetSettings())
 	if session.GetUserId() == "" {
 		err = "Not Logined"
 		return
 	}
-	time.Sleep(time.Millisecond*10)
+	time.Sleep(time.Millisecond * 10)
 	roomName := msg["roomName"].(string)
 	r, e := m.RpcInvoke("Login", "track", session)
 
-	log.TInfo(session,"演示模块间RPC调用 :", r,e)
+	log.TInfo(session, "演示模块间RPC调用 :", r, e)
 
 	userList := m.chats[roomName]
 	if userList == nil {
@@ -116,7 +116,7 @@ func (m *Chat) joinChat(session gate.Session, msg map[string]interface{}) (resul
 	return
 }
 
-func (m *Chat) say(session gate.Session, msg map[string]interface{}) (result map[string]string, err string) {
+func (m *chatStuct) say(session gate.Session, msg map[string]interface{}) (result map[string]string, err string) {
 	if msg["roomName"] == nil || msg["content"] == nil {
 		err = "roomName or say cannot be nil"
 		return
@@ -132,7 +132,6 @@ func (m *Chat) say(session gate.Session, msg map[string]interface{}) (result map
 	userList := m.chats[roomName]
 	if userList == nil {
 		err = "No room"
-		return
 	} else {
 		user := userList[session.GetUserId()]
 		if user == nil {
@@ -168,10 +167,9 @@ func (m *Chat) say(session gate.Session, msg map[string]interface{}) (result map
 				return
 			}
 		}
-
-	}
-	result = map[string]string{
-		"say":"say success",
+		result = map[string]string{
+			"say": "say success",
+		}
 	}
 	return
 }
@@ -179,7 +177,7 @@ func (m *Chat) say(session gate.Session, msg map[string]interface{}) (result map
 /**
 用户 断开连接 广播离线消息
 */
-func (m *Chat) onLeave(roomName string, Userid string) {
+func (m *chatStuct) onLeave(roomName string, Userid string) {
 	userList := m.chats[roomName]
 	if userList == nil {
 		return
