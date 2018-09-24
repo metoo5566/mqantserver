@@ -14,21 +14,21 @@
 package hitball
 
 import (
-	"testing"
-	"time"
 	"fmt"
 	"runtime"
+	"testing"
+	"time"
 )
 
 func TestTable(t *testing.T) {
-	stoped:=false
-	table:=NewTable()
-	index:=0
+	stoped := false
+	table := newTable(nil, 0)
+	index := 0
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	go func() {
 		//这里设置为22ms但实际上每次循环大概是23-25ms左右，根据机器定,客户端设置的帧为40
 		tick := time.NewTicker(22 * time.Millisecond)
-		for !stoped{
+		for !stoped {
 			select {
 			case <-tick.C:
 				table.Update(nil)
@@ -38,12 +38,12 @@ func TestTable(t *testing.T) {
 	go func() {
 		//这里设置为22ms但实际上每次循环大概是23-25ms左右，根据机器定,客户端设置的帧为40
 		tick := time.NewTicker(6 * time.Millisecond)
-		for index<=5000{
+		for index <= 5000 {
 			select {
 			case <-tick.C:
-				err:=table.PutQueue("EatCoins","127.0.0.1",1)
-				if err!=nil{
-					fmt.Println("PutQueue",err.Error())
+				err := table.PutQueue("EatCoins", "127.0.0.1", 1)
+				if err != nil {
+					fmt.Println("PutQueue", err.Error())
 				}
 				index++
 			}
@@ -53,22 +53,22 @@ func TestTable(t *testing.T) {
 	go func() {
 		//这里设置为22ms但实际上每次循环大概是23-25ms左右，根据机器定,客户端设置的帧为40
 		tick := time.NewTicker(6 * time.Millisecond)
-		for index<=5000{
+		for index <= 5000 {
 			select {
 			case <-tick.C:
-				err:=table.PutQueue("Fire","127.0.0.1",float64(30),float64(45),float64(23),float64(43))
-				if err!=nil{
-					fmt.Println("PutQueue",err.Error())
+				err := table.PutQueue("Fire", "127.0.0.1", float64(30), float64(45), float64(23), float64(43))
+				if err != nil {
+					fmt.Println("PutQueue", err.Error())
 				}
 				index++
 			}
 		}
 		fmt.Println("PutQueue end 2")
 	}()
-	for index<=5000 {
+	for index <= 5000 {
 
 	}
-	stoped=true
+	stoped = true
 	time.Sleep(1 * time.Second)
 
 }

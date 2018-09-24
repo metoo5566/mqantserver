@@ -11,61 +11,61 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 package hitball
 
 import (
-	"github.com/liangdas/mqant/module"
-	"sync"
 	"fmt"
+	"sync"
+
+	"github.com/liangdas/mqant/module"
 )
 
 type Room struct {
-	module 	module.Module
-	lock 	*sync.RWMutex
-	tables	map[int]*Table
-	index 	int
-	max     int
+	module module.Module
+	lock   *sync.RWMutex
+	tables map[int]*Table
+	index  int
+	max    int
 }
 
-func NewRoom(module module.Module)(*Room){
-	room:=&Room{
-		module:module,
-		lock:new(sync.RWMutex),
-		tables:map[int]*Table{},
-		index:0,
-		max:0,
+func NewRoom(module module.Module) *Room {
+	room := &Room{
+		module: module,
+		lock:   new(sync.RWMutex),
+		tables: map[int]*Table{},
+		index:  0,
+		max:    0,
 	}
 	return room
 }
 
-func (self *Room)create(module module.Module)(*Table){
+func (self *Room) create(module module.Module) *Table {
 	self.lock.Lock()
 	self.index++
-	table:=NewTable(module,self.index)
-	self.tables[self.index]=table
+	table := newTable(module, self.index)
+	self.tables[self.index] = table
 	self.lock.Unlock()
 	return table
 }
 
-func (self *Room)GetTable(tableId int)(*Table){
-	if table,ok:=self.tables[tableId];ok{
+func (self *Room) GetTable(tableId int) *Table {
+	if table, ok := self.tables[tableId]; ok {
 		return table
 	}
 	return nil
 }
 
-func (self *Room)GetEmptyTable()(*Table,error){
-	for _,table:=range self.tables{
-		if table.Empty(){
-			return table,nil
+func (self *Room) GetEmptyTable() (*Table, error) {
+	for _, table := range self.tables {
+		if table.Empty() {
+			return table, nil
 		}
 	}
 	//没有找到已创建的空房间,新创建一个
-	table:= self.create(self.module)
-	if table==nil{
-		return nil,fmt.Errorf("fail create table")
+	table := self.create(self.module)
+	if table == nil {
+		return nil, fmt.Errorf("fail create table")
 	}
-	return table,nil
+	return table, nil
 }
-
-

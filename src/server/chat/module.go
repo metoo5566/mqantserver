@@ -13,7 +13,7 @@ import (
 	"github.com/liangdas/mqant/module/base"
 )
 
-var chatModule = func() module.Module {
+var Module = func() module.Module {
 	chat := new(chatStuct)
 	return chat
 }
